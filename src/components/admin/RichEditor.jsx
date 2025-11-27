@@ -229,11 +229,154 @@ export default function RichEditor({ value, onChange, onInsertVariable }) {
     };
   };
 
+  const insertLink = () => {
+    if (!linkUrl) return;
+    editor.chain().focus().setLink({ href: linkUrl }).run();
+    setShowLinkModal(false);
+    setLinkUrl('');
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().unsetLink().run();
+  };
+
+  const insertTable = () => {
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  };
+
+  const findAndReplace = () => {
+    if (!searchTerm) return;
+    const content = editor.getHTML();
+    const newContent = content.replace(new RegExp(searchTerm, 'g'), replaceTerm);
+    editor.commands.setContent(newContent);
+    setShowSearchModal(false);
+  };
+
+  const wordCount = useMemo(() => {
+    if (!editor) return 0;
+    const text = editor.getText();
+    return text.split(/\s+/).filter(word => word.length > 0).length;
+  }, [editor?.state.doc]);
+
+<<<<<<< HEAD
+/**
+ * Toggle the fullscreen mode of the editor.
+ * When `isFullscreen` is true, the editor will be displayed in
+ * fullscreen mode. When `isFullscreen` is false, the editor will
+ * be displayed in normal mode.
+ */
+=======
+>>>>>>> 69174f006b994b490159ffd9f99ee7bc6b13e9e1
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const clearFormatting = () => {
+    editor.chain().focus().clearNodes().unsetAllMarks().run();
+  };
+
+  const getCurrentHeading = () => {
+    if (editor.isActive('heading', { level: 1 })) return 'Titre 1';
+    if (editor.isActive('heading', { level: 2 })) return 'Titre 2';
+    if (editor.isActive('heading', { level: 3 })) return 'Titre 3';
+    return 'Normal';
+  };
+
   return (
     <div className={`border rounded-lg bg-white shadow-sm ${isFullscreen ? 'fixed inset-4 z-50 flex flex-col' : ''}`}>
       {/* TOOLBAR PRINCIPALE */}
       <div className="border-b bg-gray-50">
-        {/* Ligne 1: Police et formatage */}
+        {/* Ligne 1: Actions et formatage */}
+        <div className="flex items-center gap-1 p-2 flex-wrap border-b">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            title="Annuler (Ctrl+Z)"
+          >
+            <Undo2 className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            title="Rétablir (Ctrl+Y)"
+          >
+            <Redo2 className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <div className="relative">
+            <DropdownButton
+              label={getCurrentHeading()}
+              onClick={() => setShowHeadingMenu(!showHeadingMenu)}
+            />
+            {showHeadingMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowHeadingMenu(false)}
+                />
+                <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-20 w-40">
+<<<<<<< HEAD
+                  {headingLevels.map(({ level, label }) => (
+=======
+                  {headingLevels.map(({ level, label, icon: Icon }) => (
+>>>>>>> 69174f006b994b490159ffd9f99ee7bc6b13e9e1
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => {
+                        if (level === 0) {
+                          editor.chain().focus().setParagraph().run();
+                        } else {
+                          editor.chain().focus().toggleHeading({ level }).run();
+                        }
+                        setShowHeadingMenu(false);
+                      }}
+                      className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-gray-100"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={clearFormatting}
+            title="Effacer le formatage"
+          >
+            <Eraser className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={() => setShowSearchModal(true)}
+            title="Rechercher/Remplacer (Ctrl+F)"
+          >
+            <Search className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-gray-500">{wordCount} mots</span>
+            <ToolbarButton
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "Quitter plein écran" : "Plein écran"}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </ToolbarButton>
+          </div>
+        </div>
+
+        {/* Ligne 2: Police et formatage */}
         <div className="flex items-center gap-1 p-2 flex-wrap">
           {/* Sélecteur de police */}
           <div className="relative">
