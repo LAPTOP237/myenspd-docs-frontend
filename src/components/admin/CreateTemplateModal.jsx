@@ -32,27 +32,39 @@ export default function CreateTemplateModal({ onClose }) {
     insertVariableRef.current(name);
   };
 
-  const onSubmit = async (data) => {
-    try {
-      const payload = {
-        ...data,
-        content: content,
-        fields: fields,
-      };
+const onSubmit = async (data) => {
+  try {
+    const payload = {
+      title: data.title,
+      description: data.description,
+      processing_time_days: Number(data.processing_time_days),
+      is_active: data.is_active,
 
-      console.log("TEMPLATE PAYLOAD =>", payload);
+      content: [
+        {
+          id: crypto.randomUUID(),
+          type: "html",
+          value: content, // contenu Tiptap (string HTML)
+        }
+      ],
 
-      await templateService.create(payload);
+      fields: fields.map(f => f.name), // ["NOM", "EMAIL", ...]
+    };
 
-      reset();
-      setContent("");
-      setFields([]);
+    console.log("TEMPLATE PAYLOAD =>", payload);
 
-      onClose();
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    await templateService.create(payload);
+
+    reset();
+    setContent("");
+    setFields([]);
+
+    onClose();
+  } catch (err) {
+    console.error("API ERROR =>", err.response?.data);
+  }
+};
+
 
   return (
     <Dialog

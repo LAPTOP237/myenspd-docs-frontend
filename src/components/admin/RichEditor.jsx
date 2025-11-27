@@ -258,15 +258,12 @@ export default function RichEditor({ value, onChange, onInsertVariable }) {
     return text.split(/\s+/).filter(word => word.length > 0).length;
   }, [editor?.state.doc]);
 
-<<<<<<< HEAD
 /**
  * Toggle the fullscreen mode of the editor.
  * When `isFullscreen` is true, the editor will be displayed in
  * fullscreen mode. When `isFullscreen` is false, the editor will
  * be displayed in normal mode.
  */
-=======
->>>>>>> 69174f006b994b490159ffd9f99ee7bc6b13e9e1
   const toggleFullscreen = () => {
     setIsFullscreen(!isFullscreen);
   };
@@ -318,11 +315,7 @@ export default function RichEditor({ value, onChange, onInsertVariable }) {
                   onClick={() => setShowHeadingMenu(false)}
                 />
                 <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-20 w-40">
-<<<<<<< HEAD
                   {headingLevels.map(({ level, label }) => (
-=======
-                  {headingLevels.map(({ level, label, icon: Icon }) => (
->>>>>>> 69174f006b994b490159ffd9f99ee7bc6b13e9e1
                     <button
                       key={level}
                       type="button"
