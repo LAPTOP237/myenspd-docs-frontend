@@ -160,9 +160,9 @@ export const documentService = {
 
   // Liste des templates
   getTemplates: async () => {
-    const response = await api.get('/templates/');
-    return response.data;
-  },
+  const response = await api.get('/templates/');
+  return response.data.results || [];
+},
 };
 
 // ============== REQUEST SERVICE ==============
