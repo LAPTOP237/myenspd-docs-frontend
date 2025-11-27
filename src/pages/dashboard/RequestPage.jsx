@@ -37,7 +37,7 @@ useEffect(() => {
         setValue(`fields.${field}`, "");
       });
     }
-  }, [selectedTemplateId]);
+  }, [selectedTemplateId, setValue, templates]);
 
   const onSubmit = async (data) => {
     setLoading(true);
@@ -47,11 +47,13 @@ useEffect(() => {
       motif: data.motif || "",
       details: data.details || "",
       urgency: data.urgency || false,
-      field_values: data.fields || {}
+      data: data.fields || {},  // <-- ici doit correspondre à onSubmit
     };
 
+    console.log("REQUEST PAYLOAD =>", payload);
+
     try {
-      await requestService.createRequest(payload);
+      await requestService.create(payload);
       toast.success("Demande envoyée !");
       reset();
       setSelectedTemplate(null);

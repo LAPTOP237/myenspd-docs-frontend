@@ -8,7 +8,7 @@ import { Badge } from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import { Spinner } from '../../components/ui/Spinner';
 
-// ✅ StatCard corrigé - icon est maintenant utilisé correctement
+// ✅ StatCard
 const StatCard = ({ icon: Icon, label, value, color, trend }) => (
   <Card hover className="p-5">
     <div className="flex items-center justify-between">

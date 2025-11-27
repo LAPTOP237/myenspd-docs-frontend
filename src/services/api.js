@@ -1,5 +1,3 @@
-// services/api.js - Version mise à jour
-
 import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000/api';
@@ -140,8 +138,13 @@ export const documentService = {
     return response.data;
   },
 
-  getById: async (id) => {
-    const response = await api.get(`/documents/${id}/`);
+  // getById: async (id) => {
+  //   const response = await api.get(`/documents/${id}/`);
+  //   return response.data;
+  // },
+
+   getById: async (id) => {
+    const response = await api.get(`/templates/${id}/`);
     return response.data;
   },
 
@@ -185,7 +188,9 @@ export const requestService = {
       motif: data.motif || '',
       details: data.details || '',
       urgency: data.urgence ? 'urgent' : 'normal',
+      data: data.data || {},
     };
+    console.log("REQUEST PAYLOAD2 =>", payload);
     const response = await api.post('/requests/', payload);
     return response.data;
   },
