@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { FileText, Download, Eye, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { FileText, Download, Eye, XCircle, Printer } from 'lucide-react';
 import { requestService, documentService } from '../../services/api';
 import { useToast } from '../../context/useToast';
 import { Card } from '../../components/ui/Card';
@@ -33,8 +33,12 @@ export const DocumentsPage = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState('');
   const [selectedRequest, setSelectedRequest] = useState(null);
-  const [templateData, setTemplateData] = useState(null); // champs dynamiques
+  const [templateFields, setTemplateFields] = useState([]);
+  const [templateData, setTemplateData] = useState(null);
+  const [renderedHtml, setRenderedHtml] = useState("");
+
   const { toast } = useToast();
+  const printRef = useRef();
 
   const fetchRequests = async (page = 1, status = '') => {
     setLoading(true);
@@ -55,6 +59,8 @@ export const DocumentsPage = () => {
     fetchRequests(currentPage, statusFilter);
   }, [currentPage, statusFilter]);
 
+  
+
   const handleGeneratePDF = async (requestId) => {
     try {
       const blob = await documentService.download(requestId);
@@ -64,7 +70,7 @@ export const DocumentsPage = () => {
       link.setAttribute('download', `demande_${requestId}.pdf`);
       document.body.appendChild(link);
       link.click();
-      link.remove();
+      link.parentNode.removeChild(link);
       toast.success('PDF généré !');
     } catch {
       toast.error('Erreur lors de la génération du PDF');
@@ -81,19 +87,43 @@ export const DocumentsPage = () => {
     }
   };
 
-  const handleViewRequest = async (req) => {
-    setSelectedRequest(req);
-    // Charger le template complet + données
-    try {
-      const template = await documentService.getById(req.template.id);
-      setTemplateData({
-        ...template,
-        fieldsValues: req.data || {},
-      });
-    } catch {
-      toast.error("Impossible de charger le template");
-      setTemplateData(null);
-    }
+const handleViewRequest = async (request) => {
+  try {
+    const template = await documentService.getById(request.template.id);
+
+    const blocks = template.content || [];
+    let html = blocks[0]?.value || ""; // le contenu HTML brut du template
+
+    // 🔥 Remplacement des variables dynamiques
+    template.fields.forEach((field) => {
+      const value = request.data?.[field] || '';
+      const regex = new RegExp(`{{\\s*${field}\\s*}}`, "g");
+      html = html.replace(regex, value);
+    });
+
+    setTemplateFields(template.fields || []);
+    setRenderedHtml(html); // stocker le HTML final
+    setSelectedRequest(request);
+
+  } catch {
+    toast.error("Impossible de charger le template");
+  }
+};
+
+
+
+
+  const handlePrint = () => {
+    if (!printRef.current) return;
+    const printContents = printRef.current.innerHTML;
+    const newWindow = window.open('', '', 'width=800,height=600');
+    newWindow.document.write('<html><head><title>Impression</title></head><body>');
+    newWindow.document.write(printContents);
+    newWindow.document.write('</body></html>');
+    newWindow.document.close();
+    newWindow.focus();
+    newWindow.print();
+    newWindow.close();
   };
 
   return (
@@ -103,9 +133,20 @@ export const DocumentsPage = () => {
       {/* Filtre par statut */}
       <div className="flex items-center gap-2">
         <span className="text-gray-700 font-medium">Filtrer par statut :</span>
-        <Button variant={statusFilter === '' ? 'primary' : 'outline'} size="sm" onClick={() => setStatusFilter('')}>Tous</Button>
+        <Button
+          variant={statusFilter === '' ? 'primary' : 'outline'}
+          size="sm"
+          onClick={() => setStatusFilter('')}
+        >
+          Tous
+        </Button>
         {Object.entries(STATUS_LABELS).map(([key, label]) => (
-          <Button key={key} variant={statusFilter === key ? 'primary' : 'outline'} size="sm" onClick={() => setStatusFilter(key)}>
+          <Button
+            key={key}
+            variant={statusFilter === key ? 'primary' : 'outline'}
+            size="sm"
+            onClick={() => setStatusFilter(key)}
+          >
             {label}
           </Button>
         ))}
@@ -150,9 +191,14 @@ export const DocumentsPage = () => {
                           <Eye className="w-4 h-4" />
                         </Button>
                         {req.status === 'approved' && (
-                          <Button variant="secondary" size="sm" onClick={() => handleGeneratePDF(req.id)}>
-                            <Download className="w-4 h-4" />
-                          </Button>
+                          <>
+                            <Button variant="secondary" size="sm" onClick={() => handleGeneratePDF(req.id)}>
+                              <Download className="w-4 h-4" />
+                            </Button>
+                            <Button variant="secondary" size="sm" onClick={handlePrint}>
+                              <Printer className="w-4 h-4" />
+                            </Button>
+                          </>
                         )}
                         {req.status === 'pending' && (
                           <Button variant="destructive" size="sm" onClick={() => handleCancel(req.id)}>
@@ -174,67 +220,49 @@ export const DocumentsPage = () => {
         )}
       </Card>
 
-     {/* Modal aperçu template avec champs dynamiques et bouton PDF */}
-{selectedRequest && templateData && (
-  <Dialog open={!!selectedRequest} onClose={() => { setSelectedRequest(null); setTemplateData(null); }}>
-    <DialogHeader>Aperçu du template</DialogHeader>
-    <DialogBody>
-      <h3 className="font-semibold text-lg">{templateData.title}</h3>
-      <p className="text-gray-600 mb-4">{templateData.description}</p>
+      {/* Modal détails de la demande */}
+      {selectedRequest && (
+        <Dialog open={!!selectedRequest} onClose={() => setSelectedRequest(null)}>
+          {/* <DialogHeader>Détails de la demande</DialogHeader> */}
+          <DialogBody className="space-y-4" ref={printRef}>
+            {/* <p><strong>Motif:</strong> {selectedRequest.motif}</p>
+            <p><strong>Détails:</strong> {selectedRequest.details || '-'}</p>
+            <p><strong>Template:</strong> {selectedRequest.template.title}</p>
+            <p><strong>Date:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p>
+            <p><strong>Statut:</strong> {STATUS_LABELS[selectedRequest.status]}</p>
 
-      <div className="space-y-3">
-        {templateData.content.map((block, idx) => {
-          if (block.type === 'text') {
-            return <p key={idx} className="text-sm">{block.value}</p>;
-          }
-          if (block.type === 'dynamic_field') {
-            const value = templateData.fieldsValues?.[block.label] || '';
-            return (
-              <div key={idx} className="p-2 bg-gray-50 border rounded">
-                <p className="text-sm font-medium">{block.label}:</p>
-                <p className="text-sm">{value}</p>
-              </div>
-            );
-          }
-          return null;
-        })}
+  <hr />
+
+  <h4 className="font-semibold">Champs dynamiques</h4>
+  {templateFields.length > 0 ? (
+    templateFields.map((field, idx) => (
+      <div key={idx} className="p-2 border rounded bg-gray-50">
+        <p className="font-medium">{field}:</p>
+        <p>{selectedRequest.data?.[field] || '-'}</p>
       </div>
-    </DialogBody>
-    <DialogFooter className="flex justify-between">
-      <Button variant="secondary" onClick={() => { setSelectedRequest(null); setTemplateData(null); }}>
-        Fermer
-      </Button>
+    ))
+  ) : (
+    <p>Aucun champ dynamique</p>
+  )}
 
-      {/* Bouton PDF */}
-      {/* {selectedRequest.status === 'approved' && ( */}
-      {selectedRequest.status === 'pending' && (
-        <Button
-          variant="primary"
-          onClick={async () => {
-            try {
-              const blob = await documentService.download(selectedRequest.id);
-              const url = window.URL.createObjectURL(blob);
-              const link = document.createElement('a');
-              link.href = url;
-              link.setAttribute('download', `demande_${selectedRequest.id}.pdf`);
-              document.body.appendChild(link);
-              link.click();
-              link.remove();
-              toast.success('PDF généré !');
-            } catch {
-              toast.error('Erreur lors de la génération du PDF');
-            }
-          }}
-        >
-          Télécharger PDF
-        </Button>
+  <hr /> */}
+<div>
+  <h4 className="font-semibold mb-2">Contenu du template</h4>
+  <div
+    className="p-2 border rounded bg-gray-100"
+    dangerouslySetInnerHTML={{ __html: renderedHtml }}
+  />
+</div>
+
+
+</DialogBody>
+          <DialogFooter>
+            <Button variant="secondary" onClick={() => setSelectedRequest(null)}>Fermer</Button>
+          </DialogFooter>
+        </Dialog>
       )}
-    </DialogFooter>
-  </Dialog>
-)}
     </div>
   );
 };
-
 
 export default DocumentsPage;

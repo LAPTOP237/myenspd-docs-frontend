@@ -145,6 +145,7 @@ export const documentService = {
 
    getById: async (id) => {
     const response = await api.get(`/templates/${id}/`);
+    
     return response.data;
   },
 
@@ -161,11 +162,22 @@ export const documentService = {
     return response.data;
   },
 
-  // Liste des templates
   getTemplates: async () => {
   const response = await api.get('/templates/');
-  return response.data.results || [];
+
+  // API paginée
+  if (response.data && Array.isArray(response.data.results)) {
+    return response.data.results;
+  }
+
+  // API non paginée
+  if (Array.isArray(response.data)) {
+    return response.data;
+  }
+
+  return [];
 },
+
 };
 
 // ============== REQUEST SERVICE ==============
