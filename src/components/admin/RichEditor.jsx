@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Image from "@tiptap/extension-image";
@@ -8,12 +8,23 @@ import Color from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
 import FontFamily from "@tiptap/extension-font-family";
-import { 
+import Link from "@tiptap/extension-link";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { TableHeader } from "@tiptap/extension-table-header";
+import Subscript from "@tiptap/extension-subscript";
+import Superscript from "@tiptap/extension-superscript";
+import CodeBlock from "@tiptap/extension-code-block";
+import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough,
   AlignLeft, AlignCenter, AlignRight, AlignJustify,
   List, ListOrdered, Indent, Outdent,
   Image as ImageIcon, Type, Highlighter,
-  ChevronDown, Minus
+  ChevronDown, Minus, Link2, Unlink, Table as TableIcon,
+  Quote, Code, Subscript as SubIcon, Superscript as SupIcon,
+  Undo2, Redo2, Eraser, Search, Maximize2, Minimize2,
+  Heading1, Heading2, Heading3, FileText, X
 } from "lucide-react";
 
 // Extension personnalisée pour la taille de police
@@ -117,32 +128,69 @@ const colors = [
 ];
 
 const highlightColors = [
-  'transparent', '#FFF9C4', '#FFECB3', '#FFE0B2', '#FFCCBC', '#F8BBD0', 
+  'transparent', '#FFF9C4', '#FFECB3', '#FFE0B2', '#FFCCBC', '#F8BBD0',
   '#E1BEE7', '#D1C4E9', '#C5CAE9', '#BBDEFB'
+];
+
+const headingLevels = [
+  { level: 1, label: 'Titre 1', icon: Heading1 },
+  { level: 2, label: 'Titre 2', icon: Heading2 },
+  { level: 3, label: 'Titre 3', icon: Heading3 },
+  { level: 0, label: 'Normal', icon: FileText },
 ];
 
 // ============== COMPOSANT PRINCIPAL ==============
 
 export default function RichEditor({ value, onChange, onInsertVariable }) {
-  const [showFontMenu, setShowFontMenu] = React.useState(false);
-  const [showSizeMenu, setShowSizeMenu] = React.useState(false);
-  const [showColorMenu, setShowColorMenu] = React.useState(false);
-  const [showHighlightMenu, setShowHighlightMenu] = React.useState(false);
+  const [showFontMenu, setShowFontMenu] = useState(false);
+  const [showSizeMenu, setShowSizeMenu] = useState(false);
+  const [showColorMenu, setShowColorMenu] = useState(false);
+  const [showHighlightMenu, setShowHighlightMenu] = useState(false);
+  const [showHeadingMenu, setShowHeadingMenu] = useState(false);
+  const [showLinkModal, setShowLinkModal] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const [showSearchModal, setShowSearchModal] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [replaceTerm, setReplaceTerm] = useState('');
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        heading: {
+          levels: [1, 2, 3],
+        },
+      }),
       TextStyle,
       Color,
       FontSize,
       Underline,
+      Subscript,
+      Superscript,
       Highlight.configure({ multicolor: true }),
       FontFamily.configure({
         types: ['textStyle'],
       }),
-      Image.configure({ 
+      Image.configure({
         inline: false,
         allowBase64: true,
+      }),
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: 'text-blue-600 underline cursor-pointer',
+        },
+      }),
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      CodeBlock.configure({
+        HTMLAttributes: {
+          class: 'bg-gray-100 rounded p-2 font-mono text-sm',
+        },
       }),
       TextAlign.configure({
         types: ['heading', 'paragraph'],
@@ -181,11 +229,147 @@ export default function RichEditor({ value, onChange, onInsertVariable }) {
     };
   };
 
+  const insertLink = () => {
+    if (!linkUrl) return;
+    editor.chain().focus().setLink({ href: linkUrl }).run();
+    setShowLinkModal(false);
+    setLinkUrl('');
+  };
+
+  const removeLink = () => {
+    editor.chain().focus().unsetLink().run();
+  };
+
+  const insertTable = () => {
+    editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  };
+
+  const findAndReplace = () => {
+    if (!searchTerm) return;
+    const content = editor.getHTML();
+    const newContent = content.replace(new RegExp(searchTerm, 'g'), replaceTerm);
+    editor.commands.setContent(newContent);
+    setShowSearchModal(false);
+  };
+
+  const wordCount = useMemo(() => {
+    if (!editor) return 0;
+    const text = editor.getText();
+    return text.split(/\s+/).filter(word => word.length > 0).length;
+  }, [editor?.state.doc]);
+
+/**
+ * Toggle the fullscreen mode of the editor.
+ * When `isFullscreen` is true, the editor will be displayed in
+ * fullscreen mode. When `isFullscreen` is false, the editor will
+ * be displayed in normal mode.
+ */
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen);
+  };
+
+  const clearFormatting = () => {
+    editor.chain().focus().clearNodes().unsetAllMarks().run();
+  };
+
+  const getCurrentHeading = () => {
+    if (editor.isActive('heading', { level: 1 })) return 'Titre 1';
+    if (editor.isActive('heading', { level: 2 })) return 'Titre 2';
+    if (editor.isActive('heading', { level: 3 })) return 'Titre 3';
+    return 'Normal';
+  };
+
   return (
-    <div className="border rounded-lg bg-white shadow-sm">
+    <div className={`border rounded-lg bg-white shadow-sm ${isFullscreen ? 'fixed inset-4 z-50 flex flex-col' : ''}`}>
       {/* TOOLBAR PRINCIPALE */}
       <div className="border-b bg-gray-50">
-        {/* Ligne 1: Police et formatage */}
+        {/* Ligne 1: Actions et formatage */}
+        <div className="flex items-center gap-1 p-2 flex-wrap border-b">
+          <ToolbarButton
+            onClick={() => editor.chain().focus().undo().run()}
+            disabled={!editor.can().undo()}
+            title="Annuler (Ctrl+Z)"
+          >
+            <Undo2 className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().redo().run()}
+            disabled={!editor.can().redo()}
+            title="Rétablir (Ctrl+Y)"
+          >
+            <Redo2 className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <div className="relative">
+            <DropdownButton
+              label={getCurrentHeading()}
+              onClick={() => setShowHeadingMenu(!showHeadingMenu)}
+            />
+            {showHeadingMenu && (
+              <>
+                <div
+                  className="fixed inset-0 z-10"
+                  onClick={() => setShowHeadingMenu(false)}
+                />
+                <div className="absolute top-full left-0 mt-1 bg-white border rounded-lg shadow-lg z-20 w-40">
+                  {headingLevels.map(({ level, label }) => (
+                    <button
+                      key={level}
+                      type="button"
+                      onClick={() => {
+                        if (level === 0) {
+                          editor.chain().focus().setParagraph().run();
+                        } else {
+                          editor.chain().focus().toggleHeading({ level }).run();
+                        }
+                        setShowHeadingMenu(false);
+                      }}
+                      className="flex items-center gap-2 w-full text-left px-3 py-2 hover:bg-gray-100"
+                    >
+                      <Icon className="w-4 h-4" />
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={clearFormatting}
+            title="Effacer le formatage"
+          >
+            <Eraser className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <ToolbarButton
+            onClick={() => setShowSearchModal(true)}
+            title="Rechercher/Remplacer (Ctrl+F)"
+          >
+            <Search className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          <div className="ml-auto flex items-center gap-2">
+            <span className="text-xs text-gray-500">{wordCount} mots</span>
+            <ToolbarButton
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "Quitter plein écran" : "Plein écran"}
+            >
+              {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+            </ToolbarButton>
+          </div>
+        </div>
+
+        {/* Ligne 2: Police et formatage */}
         <div className="flex items-center gap-1 p-2 flex-wrap">
           {/* Sélecteur de police */}
           <div className="relative">
@@ -456,14 +640,168 @@ export default function RichEditor({ value, onChange, onInsertVariable }) {
           >
             <ImageIcon className="w-4 h-4" />
           </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Liens */}
+          <ToolbarButton
+            onClick={() => setShowLinkModal(true)}
+            active={editor.isActive('link')}
+            title="Insérer un lien"
+          >
+            <Link2 className="w-4 h-4" />
+          </ToolbarButton>
+
+          {editor.isActive('link') && (
+            <ToolbarButton
+              onClick={removeLink}
+              title="Supprimer le lien"
+            >
+              <Unlink className="w-4 h-4" />
+            </ToolbarButton>
+          )}
+
+          <ToolbarDivider />
+
+          {/* Tableau */}
+          <ToolbarButton
+            onClick={insertTable}
+            title="Insérer un tableau"
+          >
+            <TableIcon className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Citation */}
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            active={editor.isActive('blockquote')}
+            title="Citation"
+          >
+            <Quote className="w-4 h-4" />
+          </ToolbarButton>
+
+          {/* Code */}
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            active={editor.isActive('code')}
+            title="Code inline"
+          >
+            <Code className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarDivider />
+
+          {/* Exposant/Indice */}
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleSuperscript().run()}
+            active={editor.isActive('superscript')}
+            title="Exposant"
+          >
+            <SupIcon className="w-4 h-4" />
+          </ToolbarButton>
+
+          <ToolbarButton
+            onClick={() => editor.chain().focus().toggleSubscript().run()}
+            active={editor.isActive('subscript')}
+            title="Indice"
+          >
+            <SubIcon className="w-4 h-4" />
+          </ToolbarButton>
         </div>
       </div>
 
       {/* ZONE D'ÉDITION */}
-      <EditorContent 
-        editor={editor} 
-        className="prose max-w-none p-6 min-h-[400px] focus:outline-none"
+      <EditorContent
+        editor={editor}
+        className={`prose max-w-none p-6 focus:outline-none overflow-y-auto ${isFullscreen ? 'flex-1' : 'min-h-[400px]'}`}
       />
+
+      {/* MODAL LIEN */}
+      {showLinkModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">Insérer un lien</h3>
+              <button
+                onClick={() => setShowLinkModal(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <input
+              type="url"
+              placeholder="https://example.com"
+              value={linkUrl}
+              onChange={(e) => setLinkUrl(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg mb-4"
+              onKeyPress={(e) => e.key === 'Enter' && insertLink()}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowLinkModal(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={insertLink}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Insérer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL RECHERCHER/REMPLACER */}
+      {showSearchModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 shadow-xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">Rechercher et remplacer</h3>
+              <button
+                onClick={() => setShowSearchModal(false)}
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg mb-3"
+            />
+            <input
+              type="text"
+              placeholder="Remplacer par..."
+              value={replaceTerm}
+              onChange={(e) => setReplaceTerm(e.target.value)}
+              className="w-full px-3 py-2 border rounded-lg mb-4"
+              onKeyPress={(e) => e.key === 'Enter' && findAndReplace()}
+            />
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowSearchModal(false)}
+                className="px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={findAndReplace}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Remplacer tout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
