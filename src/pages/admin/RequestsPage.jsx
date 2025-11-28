@@ -5,7 +5,7 @@ import { requestService } from '../../services/api';
 import { Badge } from '../../components/ui/Badge';
 import { Spinner } from '../../components/ui/Spinner';
 import { Button } from '../../components/ui/Button';
-import { Card, CardContent } from '../../components/ui/card';
+//import { Card, CardContent } from '../../components/ui/card';
 
 const statusMap = {
   pending: 'warning',
