@@ -18,7 +18,7 @@ export default defineConfig({
     // ✅ Configuration du Proxy pour éviter CORS
     proxy: {
       '/api': {
-        target: 'http://localhost:8000',  // Votre backend
+        target: 'https://myenspd-docs-backend.onrender.com/',  // Votre backend
         changeOrigin: true,
         secure: false,
         // Optionnel : rewrite si votre backend n'a pas /api
