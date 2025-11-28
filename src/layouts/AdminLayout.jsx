@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/useAuth';
 import { 
-  Home, User, FileText, CheckCircle, LogOut, Menu, X, ChevronDown, Search 
+  Home, Bell,User,  Settings, FileText, CheckCircle, LogOut, Menu, X, ChevronDown, Search 
 } from 'lucide-react';
 
 const adminMenuItems = [
@@ -15,7 +15,7 @@ const adminMenuItems = [
 const AdminLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
-  const [search, setSearch] = useState('');
+  // const [search, setSearch] = useState('');
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
@@ -34,7 +34,7 @@ const AdminLayout = () => {
       {/* Logo */}
             <div className="h-16 flex items-center justify-between px-6 border-b border-gray-200">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center overflow-hidden">
+                <div className="w-10 h-10  rounded-xl flex items-center justify-center overflow-hidden">
                   <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
                 </div>
                 <div>
@@ -82,58 +82,96 @@ const AdminLayout = () => {
 
       {/* Main content */}
       <div className="lg:ml-64 min-h-screen">
-        <header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 px-4 lg:px-6 flex items-center justify-between">
-          {/* Mobile Menu Button */}
-          <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 hover:bg-gray-100 rounded-lg">
-            <Menu className="w-6 h-6 text-gray-600" />
-          </button>
-
-          {/* Barre de recherche */}
-          <div className="flex-1 max-w-xl mx-4 hidden md:block">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Rechercher un utilisateur, demande ou template..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none"
-              />
-            </div>
-          </div>
-
-          {/* User Menu */}
-          <div className="relative">
-            <button onClick={() => setUserMenuOpen(!userMenuOpen)} className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-xl transition-colors">
-              <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-sm font-bold">
-                {user?.first_name?.[0]}{user?.last_name?.[0]}
-              </div>
-              <ChevronDown className="w-4 h-4 text-gray-400" />
+       < header className="sticky top-0 z-30 h-16 bg-white border-b border-gray-200 px-4 lg:px-6">
+          <div className="h-full flex items-center justify-between">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+            >
+              <Menu className="w-6 h-6 text-gray-600" />
             </button>
 
-            {userMenuOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setUserMenuOpen(false)} />
-                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-elevated border border-gray-100 py-2 z-50 animate-fade-in">
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="font-medium text-gray-900">{user?.first_name} {user?.last_name}</p>
-                    <p className="text-sm text-gray-500">{user?.email}</p>
+            {/* Search Bar */}
+            <div className="flex-1 max-w-xl mx-4 hidden md:block">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Rechercher un document..."
+                  className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-0 rounded-xl focus:ring-2 focus:ring-primary/20 focus:bg-white transition-all outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Right Side */}
+            <div className="flex items-center gap-3">
+              {/* Notifications */}
+              <button className="relative p-2 hover:bg-gray-100 rounded-xl transition-colors">
+                <Bell className="w-5 h-5 text-gray-600" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-secondary rounded-full" />
+              </button>
+
+              {/* User Menu */}
+              <div className="relative">
+                <button
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                >
+                  <div className="w-9 h-9 bg-gradient-to-br from-primary to-secondary rounded-full flex items-center justify-center text-white text-sm font-bold">
+                    {user?.prenom?.[0]}{user?.nom?.[0]}
                   </div>
-                  <NavLink
-                    to="/dashboard/admin/profile"
-                    onClick={() => setUserMenuOpen(false)}
-                    className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Mon Profil</span>
-                  </NavLink>
-                  <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-2.5 text-error hover:bg-error-light">
-                    <LogOut className="w-4 h-4" />
-                    <span>Déconnexion</span>
-                  </button>
-                </div>
-              </>
-            )}
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-medium text-gray-900">
+                      {user?.prenom} {user?.nom}
+                    </p>
+                    <p className="text-xs text-gray-500">{user?.filiere}</p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-gray-400 hidden sm:block" />
+                </button>
+
+                {/* Dropdown Menu */}
+                {userMenuOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-40" 
+                      onClick={() => setUserMenuOpen(false)} 
+                    />
+                    <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-elevated border border-gray-100 py-2 z-50 animate-fade-in">
+                      <div className="px-4 py-3 border-b border-gray-100">
+                        <p className="font-medium text-gray-900">{user?.prenom} {user?.nom}</p>
+                        <p className="text-sm text-gray-500">{user?.email}</p>
+                      </div>
+                      <NavLink
+                        to="/dashboard/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50"
+                      >
+                        <User className="w-4 h-4" />
+                        <span>Mon Profil</span>
+                      </NavLink>
+                      <NavLink
+                        to="/dashboard/profile"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-50"
+                      >
+                        <Settings className="w-4 h-4" />
+                        <span>Paramètres</span>
+                      </NavLink>
+                      <div className="border-t border-gray-100 mt-2 pt-2">
+                        <button
+                          onClick={handleLogout}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-error hover:bg-error-light"
+                        >
+                          <LogOut className="w-4 h-4" />
+                          <span>Déconnexion</span>
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </header>
 

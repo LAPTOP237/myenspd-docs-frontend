@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FileText, Download, Eye, XCircle, Printer } from 'lucide-react';
+import { FileText, Download, Eye, XCircle, Printer, FileDown } from 'lucide-react';
 import { requestService, documentService } from '../../services/api';
 import { useToast } from '../../context/useToast';
 import { Card } from '../../components/ui/Card';
@@ -9,6 +9,9 @@ import { Spinner } from '../../components/ui/Spinner';
 import { Pagination } from '../../components/ui/Pagination';
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '../../components/ui/Table';
 import { Dialog, DialogHeader, DialogBody, DialogFooter } from '../../components/ui/Dialog';
+import jsPDF from "jspdf";
+import html2canvas from "html2canvas";
+
 
 const STATUS_LABELS = {
   pending: 'En attente',
@@ -60,22 +63,33 @@ export const DocumentsPage = () => {
   }, [currentPage, statusFilter]);
 
   
+  const handleGeneratePDF = async () => {
+  if (!printRef.current) return;
 
-  const handleGeneratePDF = async (requestId) => {
-    try {
-      const blob = await documentService.download(requestId);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `demande_${requestId}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.parentNode.removeChild(link);
-      toast.success('PDF généré !');
-    } catch {
-      toast.error('Erreur lors de la génération du PDF');
-    }
-  };
+  const element = printRef.current;
+
+  // Capture en image
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    backgroundColor: "#ffffff"
+  });
+
+  const imgData = canvas.toDataURL("image/png");
+  const pdf = new jsPDF("p", "mm", "a4");
+
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfHeight = pdf.internal.pageSize.getHeight();
+
+  // Taille calculée en conservant les proportions
+  const imgWidth = pdfWidth;
+  const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+
+  pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+
+  pdf.save(`demande_${selectedRequest?.id}.pdf`);
+};
+
 
   const handleCancel = async (requestId) => {
     try {
@@ -94,7 +108,7 @@ const handleViewRequest = async (request) => {
     const blocks = template.content || [];
     let html = blocks[0]?.value || ""; // le contenu HTML brut du template
 
-    // 🔥 Remplacement des variables dynamiques
+    //  Remplacement des variables dynamiques
     template.fields.forEach((field) => {
       const value = request.data?.[field] || '';
       const regex = new RegExp(`{{\\s*${field}\\s*}}`, "g");
@@ -223,40 +237,31 @@ const handleViewRequest = async (request) => {
       {/* Modal détails de la demande */}
       {selectedRequest && (
         <Dialog open={!!selectedRequest} onClose={() => setSelectedRequest(null)}>
-          {/* <DialogHeader>Détails de la demande</DialogHeader> */}
-          <DialogBody className="space-y-4" ref={printRef}>
-            {/* <p><strong>Motif:</strong> {selectedRequest.motif}</p>
-            <p><strong>Détails:</strong> {selectedRequest.details || '-'}</p>
-            <p><strong>Template:</strong> {selectedRequest.template.title}</p>
-            <p><strong>Date:</strong> {new Date(selectedRequest.created_at).toLocaleDateString()}</p>
-            <p><strong>Statut:</strong> {STATUS_LABELS[selectedRequest.status]}</p>
-
-  <hr />
-
-  <h4 className="font-semibold">Champs dynamiques</h4>
-  {templateFields.length > 0 ? (
-    templateFields.map((field, idx) => (
-      <div key={idx} className="p-2 border rounded bg-gray-50">
-        <p className="font-medium">{field}:</p>
-        <p>{selectedRequest.data?.[field] || '-'}</p>
-      </div>
-    ))
-  ) : (
-    <p>Aucun champ dynamique</p>
-  )}
-
-  <hr /> */}
-<div>
-  <h4 className="font-semibold mb-2">Contenu du template</h4>
-  <div
-    className="p-2 border rounded bg-gray-100"
-    dangerouslySetInnerHTML={{ __html: renderedHtml }}
-  />
-</div>
-
+          <DialogBody className="space-y-4" >    
+        <div id="print-section" ref={printRef} className="print-card">
+          <div
+            className="p-2 border rounded bg-gray-100"
+            dangerouslySetInnerHTML={{ __html: renderedHtml }}
+          />
+        </div>
 
 </DialogBody>
           <DialogFooter>
+            <Button
+            onClick={handleGeneratePDF}
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-lg px-4 py-2 shadow-md"
+          >
+            <FileDown className="w-5 h-5" />
+            Télécharger PDF
+          </Button>
+            {/* <Button
+                onClick={handlePrint}
+                className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 shadow-md"
+              >
+                <Printer className="w-5 h-5" />
+                Imprimer
+              </Button> */}
+
             <Button variant="secondary" onClick={() => setSelectedRequest(null)}>Fermer</Button>
           </DialogFooter>
         </Dialog>

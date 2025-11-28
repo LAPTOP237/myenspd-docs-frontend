@@ -179,3 +179,43 @@
   border-top: 2px solid #e5e7eb;
   margin: 2em 0;
 }
+
+
+/* --- STYLE SPÉCIAL IMPRESSION FORMAT A4 --- */
+@media print {
+
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  /* Masquer tout sauf la zone imprimée */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Afficher uniquement le contenu du printRef */
+  #print-section, #print-section * {
+    visibility: visible !important;
+  }
+
+  /* Forcer la zone imprimée à occuper toute la largeur */
+  #print-section {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100% !important;
+  }
+
+  /* Style propre en impression */
+  .print-card {
+    border: 1px solid #ccc;
+    padding: 24px;
+    border-radius: 8px;
+    font-size: 14px;
+  }
+}

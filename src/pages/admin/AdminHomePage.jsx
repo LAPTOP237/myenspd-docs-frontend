@@ -7,12 +7,14 @@ import StatCard from '../../components/admin/StatCard';
 import CreateTemplateModal from '../../components/admin/CreateTemplateModal';
 import AddUserModal from '../../components/admin/AddUserModal';
 import { Spinner } from '../../components/ui/Spinner';
+import { useAuth } from '../../context/useAuth';
 
 const AdminHomePage = () => {
   const [stats, setStats] = useState({ users: 0, requests: 0, templates: 0 });
   const [loading, setLoading] = useState(true);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [showAddUserModal, setShowAddUserModal] = useState(false);
+  const { user } = useAuth();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -50,6 +52,35 @@ const AdminHomePage = () => {
 
   return (
     <div className="space-y-6">
+      {/* Welcome Banner */}
+      <div className="bg-gradient-to-r from-[#224F7F] to-[#1a3d62] rounded-2xl p-6 lg:p-8 text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-64 h-64 bg-[#F7A707]/20 rounded-full blur-3xl -mr-32 -mt-32" />
+        <div className="relative z-10">
+          <h1 className="text-2xl lg:text-3xl font-bold">
+            Hello, {user?.first_name || user?.username || 'Utilisateur'} 
+          </h1>
+          <p className="text-white/80 mt-2 max-w-lg">
+            Bienvenue sur votre espace pour gerer les documents administratifs de l'ENSPD.
+          </p>
+          <div className="flex flex-wrap gap-3 mt-4">
+            {user?.matricule && (
+              <span className="bg-white/20 backdrop-blur px-4 py-1.5 rounded-full text-sm font-medium">
+                {user.matricule}
+              </span>
+            )}
+            {user?.filiere && (
+              <span className="bg-white/20 backdrop-blur px-4 py-1.5 rounded-full text-sm font-medium">
+                {user.filiere}
+              </span>
+            )}
+            {user?.role && (
+              <span className="bg-[#F7A707]/90 px-4 py-1.5 rounded-full text-sm font-medium">
+                {user.role === 'STUDENT' ? 'Étudiant' : 'Personnel'}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
       {/* StatCards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <StatCard icon={User} label="Utilisateurs" value={stats.users} color="bg-blue-500" link="/dashboard/admin/users" />

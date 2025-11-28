@@ -47,7 +47,7 @@ export const RegisterPage = () => {
     <Card className="p-8 backdrop-blur-sm bg-white/95 animate-fade-in">
       {/* Header */}
      <div className="text-center mb-8">
-  <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+  <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
     <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
   </div>
   <h1 className="text-2xl font-bold text-gray-900">Créer un compte</h1>

@@ -31,7 +31,7 @@ export const LoginPage = () => {
     <Card className="p-8 backdrop-blur-sm bg-white/95 animate-fade-in">
       {/* Header */}
       <div className="text-center mb-8">
-  <div className="w-16 h-16 bg-gradient-to-br from-primary to-secondary rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
+  <div className="w-16 h-16  rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg overflow-hidden">
     <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
   </div>
   <h1 className="text-2xl font-bold text-gray-900">Bienvenue</h1>
@@ -95,14 +95,14 @@ export const LoginPage = () => {
       </form>
 
       {/* Footer */}
-      <div className="mt-8 text-center">
+      {/* <div className="mt-8 text-center">
         <p className="text-gray-600">
           Pas encore de compte?{' '}
           <Link to="/register" className="text-secondary font-semibold hover:underline">
             S'inscrire
           </Link>
         </p>
-      </div>
+      </div> */}
     </Card>
   );
 };
