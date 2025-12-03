@@ -42,7 +42,7 @@ api.interceptors.response.use(
         }
 
         // Tentative de refresh du token
-        const response = await axios.post(`${API_BASE_URL}/auth/refresh/`, {
+        const response = await axios.post(`${API_BASE_URL}/api/auth/refresh/`, {
           refresh: refreshToken,  // ⬅️ simplejwt utilise 'refresh' pas 'refresh_token'
         });
 
@@ -84,7 +84,7 @@ api.interceptors.response.use(
 // ============== AUTH SERVICE ==============
 export const authService = {
   login: async (credentials) => {
-    const response = await api.post('/auth/login/', credentials);
+    const response = await api.post('/api/auth/login/', credentials);
     const { access_token, refresh_token, user } = response.data;
     
     localStorage.setItem('access_token', access_token);
@@ -95,14 +95,14 @@ export const authService = {
   },
 
   register: async (userData) => {
-    const response = await api.post('/auth/register/', userData);
+    const response = await api.post('/api/auth/register/', userData);
     return response.data;
   },
 
   logout: async () => {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
-      await api.post('/auth/logout/', { refresh_token: refreshToken });
+      await api.post('/api/auth/logout/', { refresh_token: refreshToken });
     } finally {
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
@@ -111,12 +111,12 @@ export const authService = {
   },
 
   forgotPassword: async (email) => {
-    const response = await api.post('/auth/forgot-password/', { email });
+    const response = await api.post('/api/auth/forgot-password/', { email });
     return response.data;
   },
 
   resetPassword: async (data) => {
-    const response = await api.post('/auth/reset-password/', data);
+    const response = await api.post('/api/auth/reset-password/', data);
     return response.data;
   },
 
