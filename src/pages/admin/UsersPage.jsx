@@ -25,7 +25,7 @@ const UsersPage = () => {
           page_size: pageSize
         });
 
-        console.log("USERS API RESULT", res);
+        // console.log("USERS API RESULT", res);
 
         setUsers(res.results || res.data || []);
 

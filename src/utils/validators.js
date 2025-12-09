@@ -1,5 +1,5 @@
 export const emailRegex = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
-export const matriculeRegex = /^ENSPD\d{7}$/;
+export const matriculeRegex = /^\d{2}G\d{5}$/;
 export const phoneRegex = /^(\+237)?[26][0-9]{8}$/;
 
 export const validateEmail = (email) => {

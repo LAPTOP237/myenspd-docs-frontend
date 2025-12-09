@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://myenspd-docs-backend.onrender.com/';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://myenspd-docs-backend.onrender.com';
 
 // Création de l'instance Axios
 const api = axios.create({
@@ -43,7 +43,7 @@ api.interceptors.response.use(
 
         // Tentative de refresh du token
         const response = await axios.post(`${API_BASE_URL}/api/auth/refresh/`, {
-          refresh: refreshToken,  // ⬅️ simplejwt utilise 'refresh' pas 'refresh_token'
+          refresh: refreshToken, 
         });
 
         const { access } = response.data;
@@ -134,7 +134,7 @@ export const authService = {
 // Documents générés (DocumentInstance)
 export const documentService = {
   getAll: async (params = {}) => {
-    const response = await api.get('/documents/', { params });
+    const response = await api.get('/api/documents/', { params });
     return response.data;
   },
 
@@ -144,13 +144,13 @@ export const documentService = {
   // },
 
    getById: async (id) => {
-    const response = await api.get(`/templates/${id}/`);
+    const response = await api.get(`/api/templates/${id}/`);
     
     return response.data;
   },
 
   download: async (id) => {
-    const response = await api.get(`/documents/${id}/download/`, {
+    const response = await api.get(`/api/documents/${id}/download/`, {
       responseType: 'blob',
     });
     return response.data;
@@ -158,12 +158,12 @@ export const documentService = {
 
   // Types de documents disponibles (templates)
   getTypes: async () => {
-    const response = await api.get('/templates/types/');
+    const response = await api.get('/api/templates/types/');
     return response.data;
   },
 
   getTemplates: async () => {
-  const response = await api.get('/templates/');
+  const response = await api.get('/api/templates/');
 
   // API paginée
   if (response.data && Array.isArray(response.data.results)) {
@@ -184,12 +184,12 @@ export const documentService = {
 // Demandes de documents (DocumentRequest)
 export const requestService = {
   getAll: async (params = {}) => {
-    const response = await api.get('/requests/', { params });
+    const response = await api.get('/api/requests/', { params });
     return response.data;
   },
 
   getById: async (id) => {
-    const response = await api.get(`/requests/${id}/`);
+    const response = await api.get(`/api/requests/${id}/`);
     return response.data;
   },
 
@@ -202,13 +202,13 @@ export const requestService = {
       urgency: data.urgence ? 'urgent' : 'normal',
       data: data.data || {},
     };
-    console.log("REQUEST PAYLOAD2 =>", payload);
-    const response = await api.post('/requests/', payload);
+   // console.log("REQUEST PAYLOAD2 =>", payload);
+    const response = await api.post('/api/requests/', payload);
     return response.data;
   },
 
   cancel: async (id) => {
-    const response = await api.delete(`/requests/${id}/`);
+    const response = await api.delete(`/api/requests/${id}/`);
     return response.data;
   },
 };
@@ -216,12 +216,12 @@ export const requestService = {
 // ============== PROFILE SERVICE ==============
 export const profileService = {
   get: async () => {
-    const response = await api.get('/profile/');
+    const response = await api.get('/api/profile/');
     return response.data;
   },
 
   update: async (data) => {
-    const response = await api.put('/profile/', data);
+    const response = await api.put('/api/profile/', data);
     // Mise à jour du localStorage
     if (response.data.user) {
       localStorage.setItem('user', JSON.stringify(response.data.user));
@@ -234,7 +234,7 @@ export const profileService = {
       current_password: data.currentPassword,
       new_password: data.newPassword,
     };
-    const response = await api.post('/profile/change-password/', payload);
+    const response = await api.post('/api/profile/change-password/', payload);
     return response.data;
   },
 
@@ -242,7 +242,7 @@ export const profileService = {
     const formData = new FormData();
     formData.append('avatar', file);
     
-    const response = await api.post('/profile/avatar/', formData, {
+    const response = await api.post('/api/profile/avatar/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
@@ -258,12 +258,12 @@ export const templateService = {
       params.is_active = is_active; // true / false
     }
 
-    const response = await api.get('/admin/templates/', { params });
+    const response = await api.get('/api/admin/templates/', { params });
     return response.data; // DRF renvoie {count, next, previous, results}
   },
 
   getById: async (id) => {
-    const response = await api.get(`/admin/templates/${id}/`);
+    const response = await api.get(`/api/admin/templates/${id}/`);
     return response.data;
   },
 
@@ -276,7 +276,7 @@ export const templateService = {
       is_active: data.is_active ?? true,
       processing_time_days: data.processing_time_days || 3,
     };
-    const response = await api.post('/admin/templates/', payload);
+    const response = await api.post('/api/admin/templates/', payload);
     return response.data;
   },
 
@@ -289,12 +289,12 @@ export const templateService = {
       is_active: data.is_active ?? true,
       processing_time_days: data.processing_time_days || 3,
     };
-    const response = await api.put(`/admin/templates/${id}/`, payload);
+    const response = await api.put(`/api/admin/templates/${id}/`, payload);
     return response.data;
   },
 
   delete: async (id) => {
-    const response = await api.delete(`/admin/templates/${id}/`);
+    const response = await api.delete(`/api/admin/templates/${id}/`);
     return response.data;
   },
 };
@@ -303,12 +303,12 @@ export const templateService = {
 // ============== USER SERVICE ==============
 export const userService = {
   getAll: async (params = {}) => {
-    const response = await api.get('/admin/users/', { params });
+    const response = await api.get('/api/admin/users/', { params });
     return response.data;
   },
 
   getById: async (id) => {
-    const response = await api.get(`/admin/users/${id}/`);
+    const response = await api.get(`/api/admin/users/${id}/`);
     return response.data;
   },
 
@@ -321,7 +321,7 @@ export const userService = {
       role: data.role, // 'STUDENT' ou 'STAFF'
       password: data.password || 'defaultPassword123', // tu peux générer un mot de passe temporaire
     };
-    const response = await api.post('/admin/users/', payload);
+    const response = await api.post('/api/admin/users/', payload);
     return response.data;
   },
 
@@ -333,12 +333,12 @@ export const userService = {
       matricule: data.matricule || null,
       role: data.role,
     };
-    const response = await api.put(`/admin/users/${id}/`, payload);
+    const response = await api.put(`/api/admin/users/${id}/`, payload);
     return response.data;
   },
 
   delete: async (id) => {
-    const response = await api.delete(`/admin/users/${id}/`);
+    const response = await api.delete(`/api/admin/users/${id}/`);
     return response.data;
   },
 };
@@ -346,17 +346,17 @@ export const userService = {
 // ============== NOTIFICATION SERVICE ==============
 export const notificationService = {
   getAll: async () => {
-    const response = await api.get('/notifications/');
+    const response = await api.get('/api/notifications/');
     return response.data;
   },
 
   markAsRead: async (id) => {
-    const response = await api.put(`/notifications/${id}/read/`);
+    const response = await api.put(`/api/notifications/${id}/read/`);
     return response.data;
   },
 
   markAllAsRead: async () => {
-    const response = await api.put('/notifications/read-all/');
+    const response = await api.put('/api/notifications/read-all/');
     return response.data;
   },
 };

@@ -22,7 +22,7 @@ export const FILIERES = [
   { value: 'genie_civil', label: 'Génie Civil' },
   { value: 'genie_electrique', label: 'Génie Électrique' },
   { value: 'genie_mecanique', label: 'Génie Mécanique' },
-  { value: 'genie_industriel', label: 'Génie Industriel' },
+  { value: 'genie_proce', label: 'Génie Industriel' },
 ];
 
 export const NIVEAUX = [

@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(true);
     try {
       const data = await authService.login(credentials);
-      console.log("Login response:", data);
+    //  console.log("Login response:", data);
       setUser(data.user || data); // si ton API ne renvoie pas `user` séparé
       localStorage.setItem('user', JSON.stringify(data.user)); 
       localStorage.setItem('token', data.token); 
